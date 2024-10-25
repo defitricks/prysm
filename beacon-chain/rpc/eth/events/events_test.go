@@ -489,7 +489,7 @@ func TestStreamEvents_OperationsEvents(t *testing.T) {
 				require.NoError(t, err)
 				request := topics.testHttpRequest(testSync.ctx, t)
 				w := NewStreamingResponseWriterRecorder(testSync.ctx)
-				events := []*feed.Event{&feed.Event{Type: statefeed.MissedSlot}}
+				events := []*feed.Event{&feed.Event{Type: statefeed.PayloadAttributes}}
 
 				go func() {
 					s.StreamEvents(w, request)

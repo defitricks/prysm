@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/cache"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/blocks"
+	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/feed"
+	statefeed "github.com/prysmaticlabs/prysm/v5/beacon-chain/core/feed/state"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/helpers"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/time"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/transition"
@@ -69,6 +71,29 @@ func (s *Service) notifyForkchoiceUpdate(ctx context.Context, arg *fcuConfig) (*
 	if arg.attributes == nil {
 		arg.attributes = payloadattribute.EmptyWithVersion(headBlk.Version())
 	}
+	go func() {
+		pidx, err := helpers.BeaconProposerIndex(ctx, arg.headState)
+		if err != nil {
+			log.WithError(err).
+				WithField("head_root", arg.headRoot[:]).
+				Error("Could not get proposer index for PayloadAttributes event")
+			return
+		}
+		s.cfg.StateNotifier.StateFeed().Send(&feed.Event{
+			Type: statefeed.PayloadAttributes,
+			Data: payloadattribute.EventData{
+				ProposerIndex:     pidx,
+				ProposalSlot:      arg.headState.Slot(),
+				ParentBlockNumber: headPayload.BlockNumber(),
+				ParentBlockRoot:   arg.headRoot[:],
+				ParentBlockHash:   headPayload.BlockHash(),
+				Attributer:        arg.attributes,
+				HeadRoot:          arg.headRoot,
+				HeadState:         arg.headState,
+				HeadBlock:         arg.headBlock,
+			},
+		})
+	}()
 	payloadID, lastValidHash, err := s.cfg.ExecutionEngineCaller.ForkchoiceUpdated(ctx, fcs, arg.attributes)
 	if err != nil {
 		switch {

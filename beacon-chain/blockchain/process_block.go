@@ -7,8 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/blocks"
-	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/feed"
-	statefeed "github.com/prysmaticlabs/prysm/v5/beacon-chain/core/feed/state"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/helpers"
 	coreTime "github.com/prysmaticlabs/prysm/v5/beacon-chain/core/time"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/transition"
@@ -620,9 +618,6 @@ func (s *Service) lateBlockTasks(ctx context.Context) {
 	if !s.inRegularSync() {
 		return
 	}
-	s.cfg.StateNotifier.StateFeed().Send(&feed.Event{
-		Type: statefeed.MissedSlot,
-	})
 	s.headLock.RLock()
 	headRoot := s.headRoot()
 	headState := s.headState(ctx)
