@@ -3,11 +3,14 @@ package validator
 import (
 	"bytes"
 	"context"
+	"math/rand"
 	"sort"
+	"strconv"
 	"testing"
 
 	"github.com/prysmaticlabs/go-bitfield"
 	chainMock "github.com/prysmaticlabs/prysm/v5/beacon-chain/blockchain/testing"
+	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/helpers"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/operations/attestations"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/operations/attestations/mock"
 	"github.com/prysmaticlabs/prysm/v5/config/features"
@@ -816,6 +819,76 @@ func Test_packAttestations_ElectraOnChainAggregates(t *testing.T) {
 		require.Equal(t, 7, len(atts))
 		assert.Equal(t, true, atts[0].GetData().Slot == 1)
 	})
+}
+
+func Benchmark_packAttestations_Electra(b *testing.B) {
+	ctx := context.Background()
+
+	params.SetupTestConfigCleanup(b)
+	cfg := params.MainnetConfig().Copy()
+	cfg.ElectraForkEpoch = 1
+	params.OverrideBeaconConfig(cfg)
+
+	valCount := uint64(1048576)
+	committeeCount := helpers.SlotCommitteeCount(valCount)
+	valsPerCommittee := valCount / committeeCount / uint64(params.BeaconConfig().SlotsPerEpoch)
+
+	st, _ := util.DeterministicGenesisStateElectra(b, valCount)
+
+	key, err := blst.RandKey()
+	require.NoError(b, err)
+	sig := key.Sign([]byte{'X'})
+
+	r := rand.New(rand.NewSource(123))
+
+	var atts []ethpb.Att
+	for c := uint64(0); c < committeeCount; c++ {
+		for a := uint64(0); a < params.BeaconConfig().TargetAggregatorsPerCommittee; a++ {
+			cb := primitives.NewAttestationCommitteeBits()
+			cb.SetBitAt(c, true)
+
+			var att *ethpb.AttestationElectra
+			// Last two aggregators send aggregates for some random block root with only a few bits set.
+			if a >= params.BeaconConfig().TargetAggregatorsPerCommittee-2 {
+				root := bytesutil.PadTo([]byte("root_"+strconv.Itoa(r.Intn(100))), 32)
+				att = &ethpb.AttestationElectra{
+					Data:            util.HydrateAttestationData(&ethpb.AttestationData{Slot: params.BeaconConfig().SlotsPerEpoch - 1, BeaconBlockRoot: root}),
+					AggregationBits: bitfield.NewBitlist(valsPerCommittee),
+					CommitteeBits:   cb,
+					Signature:       sig.Marshal(),
+				}
+				for bit := uint64(0); bit < valsPerCommittee; bit++ {
+					att.AggregationBits.SetBitAt(bit, r.Intn(100) < 2) // 2% that the bit is set
+				}
+			} else {
+				att = &ethpb.AttestationElectra{
+					Data:            util.HydrateAttestationData(&ethpb.AttestationData{Slot: params.BeaconConfig().SlotsPerEpoch - 1, BeaconBlockRoot: bytesutil.PadTo([]byte("root"), 32)}),
+					AggregationBits: bitfield.NewBitlist(valsPerCommittee),
+					CommitteeBits:   cb,
+					Signature:       sig.Marshal(),
+				}
+				for bit := uint64(0); bit < valsPerCommittee; bit++ {
+					att.AggregationBits.SetBitAt(bit, r.Intn(100) < 98) // 98% that the bit is set
+				}
+			}
+
+			atts = append(atts, att)
+		}
+	}
+
+	pool := &mock.PoolMock{}
+	require.NoError(b, pool.SaveAggregatedAttestations(atts))
+
+	slot := primitives.Slot(1)
+	s := &Server{AttPool: pool, HeadFetcher: &chainMock.ChainService{}, TimeFetcher: &chainMock.ChainService{Slot: &slot}}
+
+	require.NoError(b, st.SetSlot(params.BeaconConfig().SlotsPerEpoch))
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err = s.packAttestations(ctx, st, params.BeaconConfig().SlotsPerEpoch+1)
+		require.NoError(b, err)
+	}
 }
 
 func Test_limitToMaxAttestations(t *testing.T) {
