@@ -16,7 +16,25 @@ func (c *beaconApiValidatorClient) submitSignedAggregateSelectionProof(ctx conte
 		return nil, errors.Wrap(err, "failed to marshal SignedAggregateAttestationAndProof")
 	}
 
-	if err = c.jsonRestHandler.Post(ctx, "/eth/v1/validator/aggregate_and_proofs", nil, bytes.NewBuffer(body), nil); err != nil {
+	if err = c.jsonRestHandler.Post(ctx, "/eth/v2/validator/aggregate_and_proofs", nil, bytes.NewBuffer(body), nil); err != nil {
+		return nil, err
+	}
+
+	attestationDataRoot, err := in.SignedAggregateAndProof.Message.Aggregate.Data.HashTreeRoot()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to compute attestation data root")
+	}
+
+	return &ethpb.SignedAggregateSubmitResponse{AttestationDataRoot: attestationDataRoot[:]}, nil
+}
+
+func (c *beaconApiValidatorClient) submitSignedAggregateSelectionProofElectra(ctx context.Context, in *ethpb.SignedAggregateSubmitElectraRequest) (*ethpb.SignedAggregateSubmitResponse, error) {
+	body, err := json.Marshal([]*structs.SignedAggregateAttestationAndProofElectra{jsonifySignedAggregateAndProofElectra(in.SignedAggregateAndProof)})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal SignedAggregateAttestationAndProof")
+	}
+
+	if err = c.jsonRestHandler.Post(ctx, "/eth/v2/validator/aggregate_and_proofs", nil, bytes.NewBuffer(body), nil); err != nil {
 		return nil, err
 	}
 
