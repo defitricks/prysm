@@ -31,7 +31,7 @@ func (c *beaconApiValidatorClient) submitSignedAggregateSelectionProof(ctx conte
 func (c *beaconApiValidatorClient) submitSignedAggregateSelectionProofElectra(ctx context.Context, in *ethpb.SignedAggregateSubmitElectraRequest) (*ethpb.SignedAggregateSubmitResponse, error) {
 	body, err := json.Marshal([]*structs.SignedAggregateAttestationAndProofElectra{jsonifySignedAggregateAndProofElectra(in.SignedAggregateAndProof)})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal SignedAggregateAttestationAndProof")
+		return nil, errors.Wrap(err, "failed to marshal SignedAggregateAttestationAndProofElectra")
 	}
 
 	if err = c.jsonRestHandler.Post(ctx, "/eth/v2/validator/aggregate_and_proofs", nil, bytes.NewBuffer(body), nil); err != nil {

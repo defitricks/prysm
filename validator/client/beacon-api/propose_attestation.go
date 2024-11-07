@@ -10,7 +10,10 @@ import (
 )
 
 func (c *beaconApiValidatorClient) proposeAttestation(ctx context.Context, attestation *ethpb.Attestation) (*ethpb.AttestResponse, error) {
-	if err := checkNilAttestation(attestation); err != nil {
+	if attestation == nil {
+		return nil, errors.New("attestation is nil")
+	}
+	if err := checkNilContentsAttestation(attestation); err != nil {
 		return nil, err
 	}
 
@@ -37,12 +40,8 @@ func (c *beaconApiValidatorClient) proposeAttestation(ctx context.Context, attes
 	return &ethpb.AttestResponse{AttestationDataRoot: attestationDataRoot[:]}, nil
 }
 
-// checkNilAttestation returns error if attestation or any field of attestation is nil.
-func checkNilAttestation(attestation ethpb.Att) error {
-	if attestation == nil {
-		return errors.New("attestation is nil")
-	}
-
+// checkNilContentsAttestation returns error if attestation or any field of attestation is nil.
+func checkNilContentsAttestation(attestation ethpb.Att) error {
 	if attestation.GetData() == nil {
 		return errors.New("attestation data is nil")
 	}
@@ -63,7 +62,10 @@ func checkNilAttestation(attestation ethpb.Att) error {
 }
 
 func (c *beaconApiValidatorClient) proposeAttestationElectra(ctx context.Context, attestation *ethpb.AttestationElectra) (*ethpb.AttestResponse, error) {
-	if err := checkNilAttestation(attestation); err != nil {
+	if attestation == nil {
+		return nil, errors.New("attestation is nil")
+	}
+	if err := checkNilContentsAttestation(attestation); err != nil {
 		return nil, err
 	}
 	if len(attestation.CommitteeBits) == 0 {
