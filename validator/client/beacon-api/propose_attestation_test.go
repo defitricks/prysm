@@ -127,7 +127,7 @@ func TestProposeAttestation(t *testing.T) {
 
 			jsonRestHandler.EXPECT().Post(
 				gomock.Any(),
-				"/eth/v2/beacon/pool/attestations",
+				"/eth/v1/beacon/pool/attestations",
 				nil,
 				bytes.NewBuffer(marshalledAttestations),
 				nil,

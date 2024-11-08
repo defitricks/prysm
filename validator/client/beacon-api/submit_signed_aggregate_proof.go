@@ -16,7 +16,7 @@ func (c *beaconApiValidatorClient) submitSignedAggregateSelectionProof(ctx conte
 		return nil, errors.Wrap(err, "failed to marshal SignedAggregateAttestationAndProof")
 	}
 
-	if err = c.jsonRestHandler.Post(ctx, "/eth/v2/validator/aggregate_and_proofs", nil, bytes.NewBuffer(body), nil); err != nil {
+	if err = c.jsonRestHandler.Post(ctx, "/eth/v1/validator/aggregate_and_proofs", nil, bytes.NewBuffer(body), nil); err != nil {
 		return nil, err
 	}
 
