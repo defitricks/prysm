@@ -106,7 +106,7 @@ func (c *beaconApiValidatorClient) submitAggregateSelectionProofElectra(
 		return nil, errors.Wrap(err, "failed to calculate attestation data root")
 	}
 
-	aggregateAttestationResponse, err := c.aggregateAttestation(ctx, in.Slot, attestationDataRoot[:])
+	aggregateAttestationResponse, err := c.aggregateAttestationElectra(ctx, in.Slot, attestationDataRoot[:])
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +131,24 @@ func (c *beaconApiValidatorClient) submitAggregateSelectionProofElectra(
 }
 
 func (c *beaconApiValidatorClient) aggregateAttestation(
+	ctx context.Context,
+	slot primitives.Slot,
+	attestationDataRoot []byte,
+) (*structs.AggregateAttestationResponse, error) {
+	params := url.Values{}
+	params.Add("slot", strconv.FormatUint(uint64(slot), 10))
+	params.Add("attestation_data_root", hexutil.Encode(attestationDataRoot))
+	endpoint := buildURL("/eth/v1/validator/aggregate_attestation", params)
+
+	var aggregateAttestationResponse structs.AggregateAttestationResponse
+	if err := c.jsonRestHandler.Get(ctx, endpoint, &aggregateAttestationResponse); err != nil {
+		return nil, err
+	}
+
+	return &aggregateAttestationResponse, nil
+}
+
+func (c *beaconApiValidatorClient) aggregateAttestationElectra(
 	ctx context.Context,
 	slot primitives.Slot,
 	attestationDataRoot []byte,
