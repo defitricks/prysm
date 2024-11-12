@@ -25,6 +25,7 @@ type Att interface {
 	CommitteeBitsVal() bitfield.Bitfield
 	GetSignature() []byte
 	GetCommitteeIndex() (primitives.CommitteeIndex, error)
+	IsNil() error
 }
 
 // IndexedAtt defines common functionality for all indexed attestation types.
@@ -103,6 +104,28 @@ func (a *Attestation) Version() int {
 	return version.Phase0
 }
 
+// IsNil --
+func (a *Attestation) IsNil() error {
+	if a == nil {
+		return errors.New("attestation is nil")
+	}
+	if a.GetData() == nil {
+		return errors.New("attestation data is nil")
+	}
+	if a.GetData().Source == nil || a.GetData().Target == nil {
+		return errors.New("source/target in attestation data is nil")
+	}
+	if len(a.GetAggregationBits()) == 0 {
+		return errors.New("attestation aggregation bits is empty")
+	}
+
+	if len(a.GetSignature()) == 0 {
+		return errors.New("attestation signature is empty")
+	}
+
+	return nil
+}
+
 // Clone --
 func (a *Attestation) Clone() Att {
 	return a.Copy()
@@ -138,6 +161,28 @@ func (a *Attestation) GetCommitteeIndex() (primitives.CommitteeIndex, error) {
 // Version --
 func (a *PendingAttestation) Version() int {
 	return version.Phase0
+}
+
+// IsNil --
+func (a *PendingAttestation) IsNil() error {
+	if a == nil {
+		return errors.New("attestation is nil")
+	}
+	if a.GetData() == nil {
+		return errors.New("attestation data is nil")
+	}
+	if a.GetData().Source == nil || a.GetData().Target == nil {
+		return errors.New("source/target in attestation data is nil")
+	}
+	if len(a.GetAggregationBits()) == 0 {
+		return errors.New("attestation aggregation bits is empty")
+	}
+
+	if len(a.GetSignature()) == 0 {
+		return errors.New("attestation signature is empty")
+	}
+
+	return nil
 }
 
 // Clone --
@@ -179,6 +224,28 @@ func (a *PendingAttestation) GetCommitteeIndex() (primitives.CommitteeIndex, err
 // Version --
 func (a *AttestationElectra) Version() int {
 	return version.Electra
+}
+
+// IsNil --
+func (a *AttestationElectra) IsNil() error {
+	if a == nil {
+		return errors.New("attestation is nil")
+	}
+	if a.GetData() == nil {
+		return errors.New("attestation data is nil")
+	}
+	if a.GetData().Source == nil || a.GetData().Target == nil {
+		return errors.New("source/target in attestation data is nil")
+	}
+	if len(a.GetAggregationBits()) == 0 {
+		return errors.New("attestation aggregation bits is empty")
+	}
+
+	if len(a.GetSignature()) == 0 {
+		return errors.New("attestation signature is empty")
+	}
+
+	return nil
 }
 
 // Clone --
