@@ -117,7 +117,7 @@ func TestProposeAttestation(t *testing.T) {
 			jsonRestHandler := mock.NewMockJsonRestHandler(ctrl)
 
 			var marshalledAttestations []byte
-			if test.attestation.IsEmpty() == nil {
+			if test.attestation == nil {
 				b, err := json.Marshal(jsonifyAttestations([]*ethpb.Attestation{test.attestation}))
 				require.NoError(t, err)
 				marshalledAttestations = b
@@ -283,7 +283,7 @@ func TestProposeAttestationElectra(t *testing.T) {
 			jsonRestHandler := mock.NewMockJsonRestHandler(ctrl)
 
 			var marshalledAttestations []byte
-			if test.attestation.IsEmpty() == nil {
+			if test.attestation == nil {
 				b, err := json.Marshal(jsonifyAttestationsElectra([]*ethpb.AttestationElectra{test.attestation}))
 				require.NoError(t, err)
 				marshalledAttestations = b

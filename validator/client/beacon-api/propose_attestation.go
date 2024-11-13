@@ -10,7 +10,7 @@ import (
 )
 
 func (c *beaconApiValidatorClient) proposeAttestation(ctx context.Context, attestation *ethpb.Attestation) (*ethpb.AttestResponse, error) {
-	if err := attestation.IsEmpty(); err != nil {
+	if err := validateNilAttestation(attestation); err != nil {
 		return nil, err
 	}
 	marshalledAttestation, err := json.Marshal(jsonifyAttestations([]*ethpb.Attestation{attestation}))
@@ -37,7 +37,7 @@ func (c *beaconApiValidatorClient) proposeAttestation(ctx context.Context, attes
 }
 
 func (c *beaconApiValidatorClient) proposeAttestationElectra(ctx context.Context, attestation *ethpb.AttestationElectra) (*ethpb.AttestResponse, error) {
-	if err := attestation.IsEmpty(); err != nil {
+	if err := validateNilAttestation(attestation); err != nil {
 		return nil, err
 	}
 	if len(attestation.CommitteeBits) == 0 {
@@ -65,4 +65,20 @@ func (c *beaconApiValidatorClient) proposeAttestationElectra(ctx context.Context
 	}
 
 	return &ethpb.AttestResponse{AttestationDataRoot: attestationDataRoot[:]}, nil
+}
+
+func validateNilAttestation(attestation ethpb.Att) error {
+	if attestation == nil || attestation.IsNil() {
+		return errors.New("attestation can't be nil")
+	}
+	if attestation.GetData().Source == nil {
+		return errors.New("attestation's source can't be nil")
+	}
+	if attestation.GetData().Target == nil {
+		return errors.New("attestation's target can't be nil")
+	}
+	if attestation.GetAggregationBits() == nil {
+		return errors.New("attestation's bitfield can't be nil")
+	}
+	return nil
 }
