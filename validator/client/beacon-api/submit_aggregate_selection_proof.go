@@ -25,7 +25,7 @@ func (c *beaconApiValidatorClient) submitAggregateSelectionProof(
 		return nil, err
 	}
 
-	aggregateAttestationResponse, err := c.aggregateAttestation(ctx, in.Slot, attestationDataRoot[:])
+	aggregateAttestationResponse, err := c.aggregateAttestation(ctx, in.Slot, attestationDataRoot)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *beaconApiValidatorClient) submitAggregateSelectionProofElectra(
 		return nil, err
 	}
 
-	aggregateAttestationResponse, err := c.aggregateAttestationElectra(ctx, in.Slot, attestationDataRoot[:])
+	aggregateAttestationResponse, err := c.aggregateAttestationElectra(ctx, in.Slot, attestationDataRoot)
 	if err != nil {
 		return nil, err
 	}
