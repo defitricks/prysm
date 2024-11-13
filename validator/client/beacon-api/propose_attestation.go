@@ -77,8 +77,11 @@ func validateNilAttestation(attestation ethpb.Att) error {
 	if attestation.GetData().Target == nil {
 		return errors.New("attestation's target can't be nil")
 	}
-	if attestation.GetAggregationBits() == nil {
+	if len(attestation.GetAggregationBits()) == 0 {
 		return errors.New("attestation's bitfield can't be nil")
+	}
+	if len(attestation.GetSignature()) == 0 {
+		return errors.New("attestation signature can't be nil")
 	}
 	return nil
 }

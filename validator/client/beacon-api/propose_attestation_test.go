@@ -48,7 +48,7 @@ func TestProposeAttestation(t *testing.T) {
 		},
 		{
 			name:                 "nil attestation",
-			expectedErrorMessage: "attestation is nil",
+			expectedErrorMessage: "attestation can't be nil",
 		},
 		{
 			name: "nil attestation data",
@@ -56,7 +56,7 @@ func TestProposeAttestation(t *testing.T) {
 				AggregationBits: testhelpers.FillByteSlice(4, 74),
 				Signature:       testhelpers.FillByteSlice(96, 82),
 			},
-			expectedErrorMessage: "attestation data is nil",
+			expectedErrorMessage: "attestation can't be nil",
 		},
 		{
 			name: "nil source checkpoint",
@@ -67,7 +67,7 @@ func TestProposeAttestation(t *testing.T) {
 				},
 				Signature: testhelpers.FillByteSlice(96, 82),
 			},
-			expectedErrorMessage: "source/target in attestation data is nil",
+			expectedErrorMessage: "attestation's source can't be nil",
 		},
 		{
 			name: "nil target checkpoint",
@@ -78,7 +78,7 @@ func TestProposeAttestation(t *testing.T) {
 				},
 				Signature: testhelpers.FillByteSlice(96, 82),
 			},
-			expectedErrorMessage: "source/target in attestation data is nil",
+			expectedErrorMessage: "attestation's target can't be nil",
 		},
 		{
 			name: "nil aggregation bits",
@@ -89,7 +89,7 @@ func TestProposeAttestation(t *testing.T) {
 				},
 				Signature: testhelpers.FillByteSlice(96, 82),
 			},
-			expectedErrorMessage: "attestation aggregation bits is empty",
+			expectedErrorMessage: "attestation's bitfield can't be nil",
 		},
 		{
 			name: "nil signature",
@@ -100,7 +100,7 @@ func TestProposeAttestation(t *testing.T) {
 					Target: &ethpb.Checkpoint{},
 				},
 			},
-			expectedErrorMessage: "attestation signature is empty",
+			expectedErrorMessage: "attestation signature can't be nil",
 		},
 		{
 			name:                 "bad request",
@@ -117,7 +117,7 @@ func TestProposeAttestation(t *testing.T) {
 			jsonRestHandler := mock.NewMockJsonRestHandler(ctrl)
 
 			var marshalledAttestations []byte
-			if test.attestation == nil {
+			if validateNilAttestation(test.attestation) == nil {
 				b, err := json.Marshal(jsonifyAttestations([]*ethpb.Attestation{test.attestation}))
 				require.NoError(t, err)
 				marshalledAttestations = b
@@ -188,7 +188,7 @@ func TestProposeAttestationElectra(t *testing.T) {
 		},
 		{
 			name:                 "nil attestation",
-			expectedErrorMessage: "attestation is nil",
+			expectedErrorMessage: "attestation can't be nil",
 		},
 		{
 			name: "nil attestation data",
@@ -197,7 +197,7 @@ func TestProposeAttestationElectra(t *testing.T) {
 				Signature:       testhelpers.FillByteSlice(96, 82),
 				CommitteeBits:   testhelpers.FillByteSlice(8, 83),
 			},
-			expectedErrorMessage: "attestation data is nil",
+			expectedErrorMessage: "attestation can't be nil",
 		},
 		{
 			name: "nil source checkpoint",
@@ -209,7 +209,7 @@ func TestProposeAttestationElectra(t *testing.T) {
 				Signature:     testhelpers.FillByteSlice(96, 82),
 				CommitteeBits: testhelpers.FillByteSlice(8, 83),
 			},
-			expectedErrorMessage: "source/target in attestation data is nil",
+			expectedErrorMessage: "attestation's source can't be nil",
 		},
 		{
 			name: "nil target checkpoint",
@@ -221,7 +221,7 @@ func TestProposeAttestationElectra(t *testing.T) {
 				Signature:     testhelpers.FillByteSlice(96, 82),
 				CommitteeBits: testhelpers.FillByteSlice(8, 83),
 			},
-			expectedErrorMessage: "source/target in attestation data is nil",
+			expectedErrorMessage: "attestation's target can't be nil",
 		},
 		{
 			name: "nil aggregation bits",
@@ -233,7 +233,7 @@ func TestProposeAttestationElectra(t *testing.T) {
 				Signature:     testhelpers.FillByteSlice(96, 82),
 				CommitteeBits: testhelpers.FillByteSlice(8, 83),
 			},
-			expectedErrorMessage: "attestation aggregation bits is empty",
+			expectedErrorMessage: "attestation's bitfield can't be nil",
 		},
 		{
 			name: "nil signature",
@@ -245,7 +245,7 @@ func TestProposeAttestationElectra(t *testing.T) {
 				},
 				CommitteeBits: testhelpers.FillByteSlice(8, 83),
 			},
-			expectedErrorMessage: "attestation signature is empty",
+			expectedErrorMessage: "attestation signature can't be nil",
 		},
 		{
 			name: "nil committee bits",
@@ -283,7 +283,7 @@ func TestProposeAttestationElectra(t *testing.T) {
 			jsonRestHandler := mock.NewMockJsonRestHandler(ctrl)
 
 			var marshalledAttestations []byte
-			if test.attestation == nil {
+			if validateNilAttestation(test.attestation) == nil {
 				b, err := json.Marshal(jsonifyAttestationsElectra([]*ethpb.AttestationElectra{test.attestation}))
 				require.NoError(t, err)
 				marshalledAttestations = b
