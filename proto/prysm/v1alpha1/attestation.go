@@ -106,10 +106,7 @@ func (a *Attestation) Version() int {
 
 // IsNil --
 func (a *Attestation) IsNil() bool {
-	if a == nil || a.GetData() == nil {
-		return true
-	}
-	return false
+	return a == nil || a.Data == nil
 }
 
 // Clone --
@@ -151,10 +148,7 @@ func (a *PendingAttestation) Version() int {
 
 // IsNil --
 func (a *PendingAttestation) IsNil() bool {
-	if a == nil || a.GetData() == nil {
-		return true
-	}
-	return false
+	return a == nil || a.Data == nil
 }
 
 // Clone --
@@ -200,10 +194,7 @@ func (a *AttestationElectra) Version() int {
 
 // IsNil --
 func (a *AttestationElectra) IsNil() bool {
-	if a == nil || a.GetData() == nil {
-		return true
-	}
-	return false
+	return a == nil || a.Data == nil
 }
 
 // Clone --
