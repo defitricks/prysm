@@ -659,12 +659,15 @@ func (s *Server) payloadAttributesReader(ctx context.Context, ev payloadattribut
 	ctx, cancel := context.WithTimeout(ctx, payloadAttributeTimeout)
 	edc := make(chan asyncPayloadAttrData)
 	go func() {
-		d := asyncPayloadAttrData{}
+		d := asyncPayloadAttrData{
+			version: version.String(int(ev.HeadState.Version())),
+		}
+
 		defer func() {
 			edc <- d
 		}()
 		attr := ev.Attributer
-		if attr.IsEmpty() {
+		if attr == nil || attr.IsEmpty() {
 			attr, d.err = s.computePayloadAttributes(ctx, ev)
 			if d.err != nil {
 				return
