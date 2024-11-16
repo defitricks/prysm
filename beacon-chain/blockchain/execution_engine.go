@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
+	"github.com/prysmaticlabs/prysm/v5/async/event"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/cache"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/blocks"
 	"github.com/prysmaticlabs/prysm/v5/beacon-chain/core/feed"
@@ -71,29 +72,7 @@ func (s *Service) notifyForkchoiceUpdate(ctx context.Context, arg *fcuConfig) (*
 	if arg.attributes == nil {
 		arg.attributes = payloadattribute.EmptyWithVersion(headBlk.Version())
 	}
-	go func() {
-		pidx, err := helpers.BeaconProposerIndex(ctx, arg.headState)
-		if err != nil {
-			log.WithError(err).
-				WithField("head_root", arg.headRoot[:]).
-				Error("Could not get proposer index for PayloadAttributes event")
-			return
-		}
-		s.cfg.StateNotifier.StateFeed().Send(&feed.Event{
-			Type: statefeed.PayloadAttributes,
-			Data: payloadattribute.EventData{
-				ProposerIndex:     pidx,
-				ProposalSlot:      arg.headState.Slot(),
-				ParentBlockNumber: headPayload.BlockNumber(),
-				ParentBlockRoot:   arg.headRoot[:],
-				ParentBlockHash:   headPayload.BlockHash(),
-				Attributer:        arg.attributes,
-				HeadRoot:          arg.headRoot,
-				HeadState:         arg.headState,
-				HeadBlock:         arg.headBlock,
-			},
-		})
-	}()
+	go firePayloadAttributesEvent(ctx, s.cfg.StateNotifier.StateFeed(), arg)
 	payloadID, lastValidHash, err := s.cfg.ExecutionEngineCaller.ForkchoiceUpdated(ctx, fcs, arg.attributes)
 	if err != nil {
 		switch {
@@ -190,6 +169,35 @@ func (s *Service) notifyForkchoiceUpdate(ctx context.Context, arg *fcuConfig) (*
 		}).Error("Received nil payload ID on VALID engine response")
 	}
 	return payloadID, nil
+}
+
+func firePayloadAttributesEvent(ctx context.Context, f event.SubscriberSender, cfg *fcuConfig) {
+	pidx, err := helpers.BeaconProposerIndex(ctx, cfg.headState)
+	if err != nil {
+		log.WithError(err).
+			WithField("head_root", cfg.headRoot[:]).
+			Error("Could not get proposer index for PayloadAttributes event")
+		return
+	}
+	headPayload, err := cfg.headBlock.Block().Body().Execution()
+	if err != nil {
+		log.WithError(err).Error("Could not get execution payload for head block")
+		return
+	}
+	f.Send(&feed.Event{
+		Type: statefeed.PayloadAttributes,
+		Data: payloadattribute.EventData{
+			ProposerIndex:     pidx,
+			ProposalSlot:      cfg.headState.Slot(),
+			ParentBlockNumber: headPayload.BlockNumber(),
+			ParentBlockRoot:   cfg.headRoot[:],
+			ParentBlockHash:   headPayload.BlockHash(),
+			Attributer:        cfg.attributes,
+			HeadRoot:          cfg.headRoot,
+			HeadState:         cfg.headState,
+			HeadBlock:         cfg.headBlock,
+		},
+	})
 }
 
 // getPayloadHash returns the payload hash given the block root.
