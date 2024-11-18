@@ -660,7 +660,7 @@ func (s *Server) payloadAttributesReader(ctx context.Context, ev payloadattribut
 	edc := make(chan asyncPayloadAttrData)
 	go func() {
 		d := asyncPayloadAttrData{
-			version: version.String(int(ev.HeadState.Version())),
+			version: version.String(ev.HeadState.Version()),
 		}
 
 		defer func() {
