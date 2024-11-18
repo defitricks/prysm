@@ -309,7 +309,7 @@ func registerServices(cliCtx *cli.Context, beacon *BeaconNode, synchronizer *sta
 		return errors.Wrap(err, "could not register P2P service")
 	}
 
-	log.Debugln("Registering Back Fill Service")
+	log.Debugln("Registering Backfill Service")
 	if err := beacon.RegisterBackFillService(cliCtx, bfs); err != nil {
 		return errors.Wrap(err, "could not register Back Fill service")
 	}
