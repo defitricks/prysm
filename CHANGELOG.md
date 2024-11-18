@@ -24,6 +24,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - Added GetAggregatedAttestationV2 endpoint.
 - Added SubmitAttestationsV2 endpoint.
 - Validator REST mode Electra block support
+- Added validator index label to `validator_statuses` metric
 - Added Validator REST mode use of Attestation V2 endpoints and Electra attestations
 
 ### Changed
@@ -81,6 +82,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - EIP7521 - Fixes withdrawal bug by accounting for pending partial withdrawals and deducting already withdrawn amounts from the sweep balance. [PR](https://github.com/prysmaticlabs/prysm/pull/14578)
 - unskip electra merkle spec test
 - Fix panic in validator REST mode when checking status after removing all keys
+- Fix panic on attestation interface since we call data before validation
 
 ### Security
 
