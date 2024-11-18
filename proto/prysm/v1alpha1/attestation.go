@@ -115,14 +115,14 @@ func (a *Attestation) Clone() Att {
 }
 
 // Copy --
-func (att *Attestation) Copy() *Attestation {
-	if att == nil {
+func (a *Attestation) Copy() *Attestation {
+	if a == nil {
 		return nil
 	}
 	return &Attestation{
-		AggregationBits: bytesutil.SafeCopyBytes(att.AggregationBits),
-		Data:            att.Data.Copy(),
-		Signature:       bytesutil.SafeCopyBytes(att.Signature),
+		AggregationBits: bytesutil.SafeCopyBytes(a.AggregationBits),
+		Data:            a.Data.Copy(),
+		Signature:       bytesutil.SafeCopyBytes(a.Signature),
 	}
 }
 
@@ -203,15 +203,15 @@ func (a *AttestationElectra) Clone() Att {
 }
 
 // Copy --
-func (att *AttestationElectra) Copy() *AttestationElectra {
-	if att == nil {
+func (a *AttestationElectra) Copy() *AttestationElectra {
+	if a == nil {
 		return nil
 	}
 	return &AttestationElectra{
-		AggregationBits: bytesutil.SafeCopyBytes(att.AggregationBits),
-		CommitteeBits:   bytesutil.SafeCopyBytes(att.CommitteeBits),
-		Data:            att.Data.Copy(),
-		Signature:       bytesutil.SafeCopyBytes(att.Signature),
+		AggregationBits: bytesutil.SafeCopyBytes(a.AggregationBits),
+		CommitteeBits:   bytesutil.SafeCopyBytes(a.CommitteeBits),
+		Data:            a.Data.Copy(),
+		Signature:       bytesutil.SafeCopyBytes(a.Signature),
 	}
 }
 
@@ -249,34 +249,34 @@ func (a *IndexedAttestationElectra) Version() int {
 }
 
 // Copy --
-func (indexedAtt *IndexedAttestation) Copy() *IndexedAttestation {
+func (a *IndexedAttestation) Copy() *IndexedAttestation {
 	var indices []uint64
-	if indexedAtt == nil {
+	if a == nil {
 		return nil
-	} else if indexedAtt.AttestingIndices != nil {
-		indices = make([]uint64, len(indexedAtt.AttestingIndices))
-		copy(indices, indexedAtt.AttestingIndices)
+	} else if a.AttestingIndices != nil {
+		indices = make([]uint64, len(a.AttestingIndices))
+		copy(indices, a.AttestingIndices)
 	}
 	return &IndexedAttestation{
 		AttestingIndices: indices,
-		Data:             indexedAtt.Data.Copy(),
-		Signature:        bytesutil.SafeCopyBytes(indexedAtt.Signature),
+		Data:             a.Data.Copy(),
+		Signature:        bytesutil.SafeCopyBytes(a.Signature),
 	}
 }
 
 // Copy --
-func (indexedAtt *IndexedAttestationElectra) Copy() *IndexedAttestationElectra {
+func (a *IndexedAttestationElectra) Copy() *IndexedAttestationElectra {
 	var indices []uint64
-	if indexedAtt == nil {
+	if a == nil {
 		return nil
-	} else if indexedAtt.AttestingIndices != nil {
-		indices = make([]uint64, len(indexedAtt.AttestingIndices))
-		copy(indices, indexedAtt.AttestingIndices)
+	} else if a.AttestingIndices != nil {
+		indices = make([]uint64, len(a.AttestingIndices))
+		copy(indices, a.AttestingIndices)
 	}
 	return &IndexedAttestationElectra{
 		AttestingIndices: indices,
-		Data:             indexedAtt.Data.Copy(),
-		Signature:        bytesutil.SafeCopyBytes(indexedAtt.Signature),
+		Data:             a.Data.Copy(),
+		Signature:        bytesutil.SafeCopyBytes(a.Signature),
 	}
 }
 
