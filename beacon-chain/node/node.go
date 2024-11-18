@@ -310,7 +310,7 @@ func registerServices(cliCtx *cli.Context, beacon *BeaconNode, synchronizer *sta
 	}
 
 	log.Debugln("Registering Backfill Service")
-	if err := beacon.RegisterBackFillService(cliCtx, bfs); err != nil {
+	if err := beacon.RegisterBackfillService(cliCtx, bfs); err != nil {
 		return errors.Wrap(err, "could not register Back Fill service")
 	}
 
@@ -1130,11 +1130,11 @@ func (b *BeaconNode) registerBuilderService(cliCtx *cli.Context) error {
 	return b.services.RegisterService(svc)
 }
 
-func (b *BeaconNode) RegisterBackFillService(cliCtx *cli.Context, bfs *backfill.Store) error {
+func (b *BeaconNode) RegisterBackfillService(cliCtx *cli.Context, bfs *backfill.Store) error {
 	pa := peers.NewAssigner(b.fetchP2P().Peers(), b.forkChoicer)
 	bf, err := backfill.NewService(cliCtx.Context, bfs, b.BlobStorage, b.clockWaiter, b.fetchP2P(), pa, b.BackfillOpts...)
 	if err != nil {
-		return errors.Wrap(err, "error initializing back fill service")
+		return errors.Wrap(err, "error initializing backfill service")
 	}
 
 	return b.services.RegisterService(bf)
