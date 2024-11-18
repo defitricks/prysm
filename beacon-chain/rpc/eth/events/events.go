@@ -605,7 +605,69 @@ func (s *Server) computePayloadAttributes(ctx context.Context, ev payloadattribu
 	})
 }
 
-func (s *Server) marshalAttributes(ctx context.Context, attr payloadattribute.Attributer) ([]byte, error) {
+type asyncPayloadAttrData struct {
+	data    json.RawMessage
+	version string
+	err     error
+}
+
+// This event stream is intended to be used by builders and relays.
+// Parent fields are based on state at N_{current_slot}, while the rest of fields are based on state of N_{current_slot + 1}
+func (s *Server) payloadAttributesReader(ctx context.Context, ev payloadattribute.EventData) (lazyReader, error) {
+	ctx, cancel := context.WithTimeout(ctx, payloadAttributeTimeout)
+	edc := make(chan asyncPayloadAttrData)
+	go func() {
+		d := asyncPayloadAttrData{
+			version: version.String(ev.HeadState.Version()),
+		}
+
+		defer func() {
+			edc <- d
+		}()
+		attr := ev.Attributer
+		if attr == nil || attr.IsEmpty() {
+			attr, d.err = s.computePayloadAttributes(ctx, ev)
+			if d.err != nil {
+				return
+			}
+		}
+		attributesBytes, err := marshalAttributes(attr)
+		if err != nil {
+			d.err = errors.Wrap(err, "errors marshaling payload attributes to json")
+			return
+		}
+		d.data, d.err = json.Marshal(structs.PayloadAttributesEventData{
+			ProposerIndex:     strconv.FormatUint(uint64(ev.ProposerIndex), 10),
+			ProposalSlot:      strconv.FormatUint(uint64(ev.ProposalSlot), 10),
+			ParentBlockNumber: strconv.FormatUint(ev.ParentBlockNumber, 10),
+			ParentBlockRoot:   hexutil.Encode(ev.ParentBlockRoot),
+			ParentBlockHash:   hexutil.Encode(ev.ParentBlockHash),
+			PayloadAttributes: attributesBytes,
+		})
+		if d.err != nil {
+			d.err = errors.Wrap(d.err, "errors marshaling payload attributes event data to json")
+		}
+	}()
+	return func() io.Reader {
+		defer cancel()
+		select {
+		case <-ctx.Done():
+			log.WithError(ctx.Err()).Warn("Context canceled while waiting for payload attributes event data")
+			return nil
+		case ed := <-edc:
+			if ed.err != nil {
+				log.WithError(ed.err).Warn("Error while marshaling payload attributes event data")
+				return nil
+			}
+			return jsonMarshalReader(PayloadAttributesTopic, &structs.PayloadAttributesEvent{
+				Version: ed.version,
+				Data:    ed.data,
+			})
+		}
+	}, nil
+}
+
+func marshalAttributes(attr payloadattribute.Attributer) ([]byte, error) {
 	v := attr.Version()
 	if v < version.Bellatrix {
 		return nil, errors.Wrapf(errUnsupportedPayloadAttribute, "Payload version %s is not supported", version.String(v))
@@ -645,68 +707,6 @@ func (s *Server) marshalAttributes(ctx context.Context, attr payloadattribute.At
 		Withdrawals:           withdrawals,
 		ParentBeaconBlockRoot: hexutil.Encode(parentRoot),
 	})
-}
-
-type asyncPayloadAttrData struct {
-	data    json.RawMessage
-	version string
-	err     error
-}
-
-// This event stream is intended to be used by builders and relays.
-// Parent fields are based on state at N_{current_slot}, while the rest of fields are based on state of N_{current_slot + 1}
-func (s *Server) payloadAttributesReader(ctx context.Context, ev payloadattribute.EventData) (lazyReader, error) {
-	ctx, cancel := context.WithTimeout(ctx, payloadAttributeTimeout)
-	edc := make(chan asyncPayloadAttrData)
-	go func() {
-		d := asyncPayloadAttrData{
-			version: version.String(ev.HeadState.Version()),
-		}
-
-		defer func() {
-			edc <- d
-		}()
-		attr := ev.Attributer
-		if attr == nil || attr.IsEmpty() {
-			attr, d.err = s.computePayloadAttributes(ctx, ev)
-			if d.err != nil {
-				return
-			}
-		}
-		attributesBytes, err := s.marshalAttributes(ctx, attr)
-		if err != nil {
-			d.err = errors.Wrap(err, "errors marshaling payload attributes to json")
-			return
-		}
-		d.data, d.err = json.Marshal(structs.PayloadAttributesEventData{
-			ProposerIndex:     strconv.FormatUint(uint64(ev.ProposerIndex), 10),
-			ProposalSlot:      strconv.FormatUint(uint64(ev.ProposalSlot), 10),
-			ParentBlockNumber: strconv.FormatUint(ev.ParentBlockNumber, 10),
-			ParentBlockRoot:   hexutil.Encode(ev.ParentBlockRoot),
-			ParentBlockHash:   hexutil.Encode(ev.ParentBlockHash),
-			PayloadAttributes: attributesBytes,
-		})
-		if d.err != nil {
-			d.err = errors.Wrap(d.err, "errors marshaling payload attributes event data to json")
-		}
-	}()
-	return func() io.Reader {
-		defer cancel()
-		select {
-		case <-ctx.Done():
-			log.WithError(ctx.Err()).Warn("Context canceled while waiting for payload attributes event data")
-			return nil
-		case ed := <-edc:
-			if ed.err != nil {
-				log.WithError(ed.err).Warn("Error while marshaling payload attributes event data")
-				return nil
-			}
-			return jsonMarshalReader(PayloadAttributesTopic, &structs.PayloadAttributesEvent{
-				Version: ed.version,
-				Data:    ed.data,
-			})
-		}
-	}, nil
 }
 
 func newStreamingResponseController(rw http.ResponseWriter, timeout time.Duration) *streamingResponseWriterController {
