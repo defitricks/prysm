@@ -26,7 +26,7 @@ Examples of when not to use a feature flag:
 
 ## How to use a feature flag?
 
-Once it has been decided that you should use a feature flag. Follow these steps to safely
+Once it has been decided that you should use a feature flag, follow these steps to safely
 release your feature. In general, try to create a single PR for each step of this process.
 
 1. Add your feature flag to `shared/featureconfig/flags.go`, use the flag to toggle a boolean in the
